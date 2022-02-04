@@ -7,7 +7,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/nav_sat_fix.hpp>
 #include <sensor_msgs/msg/nav_sat_status.hpp>
-#include <gps_tools/conversions.h>
+#include <gps_tools/conversions.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 
 #include <string>

@@ -2,7 +2,7 @@
 <package format="3">
   <name>gpsd_client</name>
   <version>1.0.4</version>
-  <description>connects to a GPSd server and broadcasts GPS fixes 
+  <description>connects to a GPSd server and broadcasts GPS fixes
    using the NavSatFix message</description>
 
   <maintainer email="preed@swri.org">P. J. Reed</maintainer>
@@ -20,6 +20,9 @@
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
   <depend>sensor_msgs</depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

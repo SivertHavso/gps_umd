@@ -1,7 +1,13 @@
 cmake_minimum_required(VERSION 3.10)
 project(gpsd_client)
 
-set(CMAKE_CXX_STANDARD 14)
+# Use C++14 standard
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
 
 find_package(ament_cmake REQUIRED)
 
@@ -47,5 +53,26 @@ install(TARGETS ${PROJECT_NAME}
 ament_export_dependencies(ament_cmake)
 ament_export_dependencies(rclcpp)
 ament_export_libraries(${PROJECT_NAME})
+
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+
+  # ignore copyright checks
+  list(APPEND AMENT_LINT_AUTO_EXCLUDE
+    ament_cmake_cpplint
+    ament_cmake_copyright
+  )
+
+  # run cpplint without copyright filter
+  find_package(ament_cmake_cpplint)
+  ament_cpplint(
+    FILTERS -legal/copyright
+  )
+
+  # the following line skips cpplint (only works in a git repo)
+  # uncomment the line when this package is not in a git repo
+  #set(ament_cmake_cpplint_FOUND TRUE)
+  ament_lint_auto_find_test_dependencies()
+endif()
 
 ament_package()
