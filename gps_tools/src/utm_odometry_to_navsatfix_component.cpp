@@ -10,13 +10,15 @@
 #include <gps_tools/conversions.h>
 #include <nav_msgs/msg/odometry.hpp>
 
+#include <string>
+
 namespace gps_tools
 {
 class UtmOdometryToNavSatFixComponent : public rclcpp::Node
 {
 public:
-  explicit UtmOdometryToNavSatFixComponent(const rclcpp::NodeOptions& options) :
-      Node("utm_odometry_to_navsatfix_node", options)
+  explicit UtmOdometryToNavSatFixComponent(const rclcpp::NodeOptions & options)
+  : Node("utm_odometry_to_navsatfix_node", options)
   {
     get_parameter_or("frame_id", frame_id_, std::string(""));
     get_parameter_or("zone", zone_, std::string(""));
@@ -24,63 +26,64 @@ public:
     fix_pub_ = create_publisher<sensor_msgs::msg::NavSatFix>("fix", 10);
 
     auto callback = [this](const typename nav_msgs::msg::Odometry::SharedPtr odom) -> void
-    {
-      if (odom->header.stamp.sec == 0 && odom->header.stamp.nanosec == 0) {
-        return;
-      }
-
-      if (!fix_pub_) {
-        return;
-      }
-
-      double northing, easting, latitude, longitude;
-      std::string zone;
-      sensor_msgs::msg::NavSatFix fix;
-
-      northing = odom->pose.pose.position.y;
-      easting = odom->pose.pose.position.x;
-
-      if(zone_.length() > 0) {
-        // utm zone was supplied as a ROS parameter
-        zone = zone_;
-        fix.header.frame_id = odom->header.frame_id;
-      } else {
-        // look for the utm zone in the frame_id
-        std::size_t pos = odom->header.frame_id.find("/utm_");
-        if(pos==std::string::npos) {
-          RCLCPP_WARN(this->get_logger(), "UTM zone not found in frame_id");
+      {
+        if (odom->header.stamp.sec == 0 && odom->header.stamp.nanosec == 0) {
           return;
         }
-        zone = odom->header.frame_id.substr(pos + 5, 3);
-        fix.header.frame_id = odom->header.frame_id.substr(0, pos);
-      }
 
-      RCLCPP_INFO(this->get_logger(), "zone: %s", zone.c_str());
+        if (!fix_pub_) {
+          return;
+        }
 
-      fix.header.stamp = odom->header.stamp;
+        double northing, easting, latitude, longitude;
+        std::string zone;
+        sensor_msgs::msg::NavSatFix fix;
 
-      UTMtoLL(northing, easting, zone, latitude, longitude);
+        northing = odom->pose.pose.position.y;
+        easting = odom->pose.pose.position.x;
 
-      fix.latitude = latitude;
-      fix.longitude = longitude;
-      fix.altitude = odom->pose.pose.position.z;
+        if (zone_.length() > 0) {
+          // utm zone was supplied as a ROS parameter
+          zone = zone_;
+          fix.header.frame_id = odom->header.frame_id;
+        } else {
+          // look for the utm zone in the frame_id
+          std::size_t pos = odom->header.frame_id.find("/utm_");
+          if (pos == std::string::npos) {
+            RCLCPP_WARN(this->get_logger(), "UTM zone not found in frame_id");
+            return;
+          }
+          zone = odom->header.frame_id.substr(pos + 5, 3);
+          fix.header.frame_id = odom->header.frame_id.substr(0, pos);
+        }
 
-      fix.position_covariance[0] = odom->pose.covariance[0];
-      fix.position_covariance[1] = odom->pose.covariance[1];
-      fix.position_covariance[2] = odom->pose.covariance[2];
-      fix.position_covariance[3] = odom->pose.covariance[6];
-      fix.position_covariance[4] = odom->pose.covariance[7];
-      fix.position_covariance[5] = odom->pose.covariance[8];
-      fix.position_covariance[6] = odom->pose.covariance[12];
-      fix.position_covariance[7] = odom->pose.covariance[13];
-      fix.position_covariance[8] = odom->pose.covariance[14];
+        RCLCPP_INFO(this->get_logger(), "zone: %s", zone.c_str());
 
-      fix.status.status = sensor_msgs::msg::NavSatStatus::STATUS_FIX;
+        fix.header.stamp = odom->header.stamp;
 
-      fix_pub_->publish(fix);
-    };
+        UTMtoLL(northing, easting, zone, latitude, longitude);
+
+        fix.latitude = latitude;
+        fix.longitude = longitude;
+        fix.altitude = odom->pose.pose.position.z;
+
+        fix.position_covariance[0] = odom->pose.covariance[0];
+        fix.position_covariance[1] = odom->pose.covariance[1];
+        fix.position_covariance[2] = odom->pose.covariance[2];
+        fix.position_covariance[3] = odom->pose.covariance[6];
+        fix.position_covariance[4] = odom->pose.covariance[7];
+        fix.position_covariance[5] = odom->pose.covariance[8];
+        fix.position_covariance[6] = odom->pose.covariance[12];
+        fix.position_covariance[7] = odom->pose.covariance[13];
+        fix.position_covariance[8] = odom->pose.covariance[14];
+
+        fix.status.status = sensor_msgs::msg::NavSatStatus::STATUS_FIX;
+
+        fix_pub_->publish(fix);
+      };
     odom_sub_ = create_subscription<nav_msgs::msg::Odometry>("odom", 10, callback);
   }
+
 private:
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
   rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr fix_pub_;
@@ -88,7 +91,7 @@ private:
   std::string frame_id_;
   std::string zone_;
 };
-}
+}  // namespace gps_tools
 
 /*using namespace gps_tools;
 
@@ -136,7 +139,7 @@ void callback(const nav_msgs::OdometryConstPtr& odom) {
   UTMtoLL(northing, easting, zone, latitude, longitude);
 
   fix.latitude = latitude;
-  fix.longitude = longitude; 
+  fix.longitude = longitude;
   fix.altitude = odom->pose.pose.position.z;
 
   fix.position_covariance[0] = odom->pose.covariance[0];
@@ -148,7 +151,7 @@ void callback(const nav_msgs::OdometryConstPtr& odom) {
   fix.position_covariance[6] = odom->pose.covariance[12];
   fix.position_covariance[7] = odom->pose.covariance[13];
   fix.position_covariance[8] = odom->pose.covariance[14];
-  
+
   fix.status.status = sensor_msgs::msg::NavSatStatus::STATUS_FIX;
 
   fix_pub.publish(fix);
@@ -170,5 +173,5 @@ int main (int argc, char **argv) {
 }
 */
 
-#include <rclcpp_components/register_node_macro.hpp>
+#include <rclcpp_components/register_node_macro.hpp>  // NOLINT
 RCLCPP_COMPONENTS_REGISTER_NODE(gps_tools::UtmOdometryToNavSatFixComponent)

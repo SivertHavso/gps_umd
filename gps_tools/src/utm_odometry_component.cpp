@@ -9,26 +9,27 @@
 #include <gps_tools/conversions.h>
 #include <nav_msgs/msg/odometry.hpp>
 
+#include <string>
 
 namespace gps_tools
 {
-  class UtmOdometryComponent : public rclcpp::Node
+class UtmOdometryComponent : public rclcpp::Node
+{
+public:
+  explicit UtmOdometryComponent(const rclcpp::NodeOptions & options)
+  : Node("utm_odometry_node", options),
+    fix_sub_(nullptr),
+    rot_cov_(99999.0),
+    append_zone_(false)
   {
-  public:
-    explicit UtmOdometryComponent(const rclcpp::NodeOptions& options) :
-      Node("utm_odometry_node", options),
-      fix_sub_(nullptr),
-      rot_cov_(99999.0),
-      append_zone_(false)
-    {
-      odom_pub_ = create_publisher<nav_msgs::msg::Odometry>("odom", 10);
+    odom_pub_ = create_publisher<nav_msgs::msg::Odometry>("odom", 10);
 
-      get_parameter_or("rot_covariance", rot_cov_, rot_cov_);
-      get_parameter_or("child_frame_id", child_frame_id_, child_frame_id_);
-      get_parameter_or("frame_id", frame_id_, frame_id_);
-      get_parameter_or("append_zone", append_zone_, append_zone_);
+    get_parameter_or("rot_covariance", rot_cov_, rot_cov_);
+    get_parameter_or("child_frame_id", child_frame_id_, child_frame_id_);
+    get_parameter_or("frame_id", frame_id_, frame_id_);
+    get_parameter_or("append_zone", append_zone_, append_zone_);
 
-      auto callback = [this](const typename sensor_msgs::msg::NavSatFix::SharedPtr fix) -> void
+    auto callback = [this](const typename sensor_msgs::msg::NavSatFix::SharedPtr fix) -> void
       {
         if (fix->status.status == sensor_msgs::msg::NavSatStatus::STATUS_NO_FIX) {
           RCLCPP_DEBUG(this->get_logger(), "No fix.");
@@ -49,13 +50,13 @@ namespace gps_tools
           odom.header.stamp = fix->header.stamp;
 
           if (frame_id_.empty()) {
-            if(append_zone_) {
+            if (append_zone_) {
               odom.header.frame_id = fix->header.frame_id + "/utm_" + zone;
             } else {
               odom.header.frame_id = fix->header.frame_id;
             }
           } else {
-            if(append_zone_) {
+            if (append_zone_) {
               odom.header.frame_id = frame_id_ + "/utm_" + zone;
             } else {
               odom.header.frame_id = frame_id_;
@@ -75,41 +76,41 @@ namespace gps_tools
 
           // Use ENU covariance to build XYZRPY covariance
           std::array<double, 36> covariance = {{
-                                                     fix->position_covariance[0],
-                                                     fix->position_covariance[1],
-                                                     fix->position_covariance[2],
-                                                     0, 0, 0,
-                                                     fix->position_covariance[3],
-                                                     fix->position_covariance[4],
-                                                     fix->position_covariance[5],
-                                                     0, 0, 0,
-                                                     fix->position_covariance[6],
-                                                     fix->position_covariance[7],
-                                                     fix->position_covariance[8],
-                                                     0, 0, 0,
-                                                     0, 0, 0, rot_cov_, 0, 0,
-                                                     0, 0, 0, 0, rot_cov_, 0,
-                                                     0, 0, 0, 0, 0, rot_cov_
-                                                 }};
+            fix->position_covariance[0],
+            fix->position_covariance[1],
+            fix->position_covariance[2],
+            0, 0, 0,
+            fix->position_covariance[3],
+            fix->position_covariance[4],
+            fix->position_covariance[5],
+            0, 0, 0,
+            fix->position_covariance[6],
+            fix->position_covariance[7],
+            fix->position_covariance[8],
+            0, 0, 0,
+            0, 0, 0, rot_cov_, 0, 0,
+            0, 0, 0, 0, rot_cov_, 0,
+            0, 0, 0, 0, 0, rot_cov_
+          }};
 
           odom.pose.covariance = covariance;
 
           odom_pub_->publish(odom);
         }
       };
-      fix_sub_ = create_subscription<sensor_msgs::msg::NavSatFix>("fix", 10, callback);
-    }
+    fix_sub_ = create_subscription<sensor_msgs::msg::NavSatFix>("fix", 10, callback);
+  }
 
-  private:
-    rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
-    rclcpp::Subscription<sensor_msgs::msg::NavSatFix>::SharedPtr fix_sub_;
+private:
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
+  rclcpp::Subscription<sensor_msgs::msg::NavSatFix>::SharedPtr fix_sub_;
 
-    std::string frame_id_;
-    std::string child_frame_id_;
-    double rot_cov_;
-    bool append_zone_;
-  };
-}
+  std::string frame_id_;
+  std::string child_frame_id_;
+  double rot_cov_;
+  bool append_zone_;
+};
+}  // namespace gps_tools
 
-#include <rclcpp_components/register_node_macro.hpp>
+#include <rclcpp_components/register_node_macro.hpp>  // NOLINT
 RCLCPP_COMPONENTS_REGISTER_NODE(gps_tools::UtmOdometryComponent)

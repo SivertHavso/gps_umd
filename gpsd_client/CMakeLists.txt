@@ -11,7 +11,7 @@ find_package(rclcpp_components REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 find_package(PkgConfig REQUIRED)
-pkg_check_modules (libgps REQUIRED libgps)
+pkg_check_modules(libgps REQUIRED libgps)
 
 add_library(${PROJECT_NAME} SHARED
   src/client.cpp
