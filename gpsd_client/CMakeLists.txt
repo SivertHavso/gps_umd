@@ -9,6 +9,8 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+include_directories(include)
+
 find_package(ament_cmake REQUIRED)
 
 find_package(gps_msgs REQUIRED)
@@ -18,6 +20,8 @@ find_package(sensor_msgs REQUIRED)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(libgps REQUIRED libgps)
+
+# Library / component
 
 add_library(${PROJECT_NAME} SHARED
   src/client.cpp
@@ -40,14 +44,34 @@ ament_target_dependencies(${PROJECT_NAME}
   "sensor_msgs"
 )
 
+
+# Executable / node
+
+add_executable(${PROJECT_NAME}_node
+  src/client_node.cpp)
+target_include_directories(${PROJECT_NAME}_node
+  PUBLIC
+  ${libgps_INCLUDE_DIRS}
+)
+target_link_libraries(${PROJECT_NAME}_node
+  ${PROJECT_NAME}
+)
+ament_target_dependencies(${PROJECT_NAME}_node
+  "gps_msgs"
+  "rclcpp"
+  "rclcpp_components"
+  "sensor_msgs"
+)
+
+
 #############
 ## Install ##
 #############
 
-install(TARGETS ${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_node
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
 ament_export_dependencies(ament_cmake)
