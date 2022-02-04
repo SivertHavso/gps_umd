@@ -1,3 +1,5 @@
+std_msgs/Header header
+
 # Satellites used in solution
 uint16 satellites_used # Number of satellites
 int32[] satellite_used_prn # PRN identifiers
@@ -30,3 +32,4 @@ uint16 SOURCE_ACCEL=64 # Using accelerometers
 uint16 motion_source # Source for speed, climb and track
 uint16 orientation_source # Source for device orientation
 uint16 position_source # Source for position
+
