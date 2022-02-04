@@ -111,103 +111,100 @@ namespace gpsd_client
     {
       rclcpp::Time time = this->get_clock()->now();
 
-      gps_msgs::msg::GPSFix fix;
-      gps_msgs::msg::GPSStatus status;
+      gps_msgs::msg::GPSFix::UniquePtr fix = std::make_unique<gps_msgs::msg::GPSFix>();
 
-      status.header.stamp = time;
-      fix.header.stamp = time;
-      fix.header.frame_id = frame_id_;
+      fix->status.header.stamp = time;
+      fix->header.stamp = time;
+      fix->header.frame_id = frame_id_;
 
-      status.satellites_used = p->satellites_used;
+      fix->status.satellites_used = p->satellites_used;
 
-      status.satellite_used_prn.resize(status.satellites_used);
-      for (int i = 0; i < status.satellites_used; ++i)
+      fix->status.satellite_used_prn.resize(fix->status.satellites_used);
+      for (int i = 0; i < fix->status.satellites_used; ++i)
       {
 #if GPSD_API_MAJOR_VERSION > 5
-        status.satellite_used_prn[i] = p->skyview[i].used;
+        fix->status.satellite_used_prn[i] = p->skyview[i].used;
 #else
-        status.satellite_used_prn[i] = p->used[i];
+        fix->status.satellite_used_prn[i] = p->used[i];
 #endif
       }
 
-      status.satellites_visible = SATS_VISIBLE;
+      fix->status.satellites_visible = SATS_VISIBLE;
 
-      status.satellite_visible_prn.resize(status.satellites_visible);
-      status.satellite_visible_z.resize(status.satellites_visible);
-      status.satellite_visible_azimuth.resize(status.satellites_visible);
-      status.satellite_visible_snr.resize(status.satellites_visible);
+      fix->status.satellite_visible_prn.resize(fix->status.satellites_visible);
+      fix->status.satellite_visible_z.resize(fix->status.satellites_visible);
+      fix->status.satellite_visible_azimuth.resize(fix->status.satellites_visible);
+      fix->status.satellite_visible_snr.resize(fix->status.satellites_visible);
 
       for (int i = 0; i < SATS_VISIBLE; ++i)
       {
 #if GPSD_API_MAJOR_VERSION > 5
-        status.satellite_visible_prn[i] = p->skyview[i].PRN;
-        status.satellite_visible_z[i] = p->skyview[i].elevation;
-        status.satellite_visible_azimuth[i] = p->skyview[i].azimuth;
-        status.satellite_visible_snr[i] = p->skyview[i].ss;
+        fix->status.satellite_visible_prn[i] = p->skyview[i].PRN;
+        fix->status.satellite_visible_z[i] = p->skyview[i].elevation;
+        fix->status.satellite_visible_azimuth[i] = p->skyview[i].azimuth;
+        fix->status.satellite_visible_snr[i] = p->skyview[i].ss;
 #else
-        status.satellite_visible_prn[i] = p->PRN[i];
-        status.satellite_visible_z[i] = p->elevation[i];
-        status.satellite_visible_azimuth[i] = p->azimuth[i];
-        status.satellite_visible_snr[i] = p->ss[i];
+        fix->status.satellite_visible_prn[i] = p->PRN[i];
+        fix->status.satellite_visible_z[i] = p->elevation[i];
+        fix->status.satellite_visible_azimuth[i] = p->azimuth[i];
+        fix->status.satellite_visible_snr[i] = p->ss[i];
 #endif
       }
 
       if ((p->status & STATUS_FIX) && !(check_fix_by_variance_ && std::isnan(p->fix.epx)))
       {
-        status.status = 0; // FIXME: gpsmm puts its constants in the global
+        fix->status.status = 0; // FIXME: gpsmm puts its constants in the global
         // namespace, so `GPSStatus::STATUS_FIX' is illegal.
 
 // STATUS_DGPS_FIX was removed in API version 6 but re-added afterward
 #if GPSD_API_MAJOR_VERSION != 6
         if (p->status & STATUS_DGPS_FIX)
-          status.status |= 18; // same here
+          fix->status.status |= 18; // same here
 #endif
 
 #if GPSD_API_MAJOR_VERSION >= 9
-        fix.time = (double)(p->fix.time.tv_sec) + (double)(p->fix.time.tv_nsec) / 1000000.;
+        fix->time = (double)(p->fix.time.tv_sec) + (double)(p->fix.time.tv_nsec) / 1000000.;
 #else
-        fix.time = p->fix.time;
+        fix->time = p->fix.time;
 #endif
-        fix.latitude = p->fix.latitude;
-        fix.longitude = p->fix.longitude;
-        fix.altitude = p->fix.altitude;
-        fix.track = p->fix.track;
-        fix.speed = p->fix.speed;
-        fix.climb = p->fix.climb;
+        fix->latitude = p->fix.latitude;
+        fix->longitude = p->fix.longitude;
+        fix->altitude = p->fix.altitude;
+        fix->track = p->fix.track;
+        fix->speed = p->fix.speed;
+        fix->climb = p->fix.climb;
 
 #if GPSD_API_MAJOR_VERSION > 3
-        fix.pdop = p->dop.pdop;
-        fix.hdop = p->dop.hdop;
-        fix.vdop = p->dop.vdop;
-        fix.tdop = p->dop.tdop;
-        fix.gdop = p->dop.gdop;
+        fix->pdop = p->dop.pdop;
+        fix->hdop = p->dop.hdop;
+        fix->vdop = p->dop.vdop;
+        fix->tdop = p->dop.tdop;
+        fix->gdop = p->dop.gdop;
 #else
-        fix.pdop = p->pdop;
-        fix.hdop = p->hdop;
-        fix.vdop = p->vdop;
-        fix.tdop = p->tdop;
-        fix.gdop = p->gdop;
+        fix->pdop = p->pdop;
+        fix->hdop = p->hdop;
+        fix->vdop = p->vdop;
+        fix->tdop = p->tdop;
+        fix->gdop = p->gdop;
 #endif
 
 #if GPSD_API_MAJOR_VERSION < 8
-        fix.err = p->epe;
+        fix->err = p->epe;
 #else
-        fix.err = p->fix.eph;
+        fix->err = p->fix.eph;
 #endif
-        fix.err_vert = p->fix.epv;
-        fix.err_track = p->fix.epd;
-        fix.err_speed = p->fix.eps;
-        fix.err_climb = p->fix.epc;
-        fix.err_time = p->fix.ept;
+        fix->err_vert = p->fix.epv;
+        fix->err_track = p->fix.epd;
+        fix->err_speed = p->fix.eps;
+        fix->err_climb = p->fix.epc;
+        fix->err_time = p->fix.ept;
 
         /* TODO: attitude */
       } else {
-        status.status = -1; // STATUS_NO_FIX
+        fix->status.status = -1; // STATUS_NO_FIX
       }
 
-      fix.status = status;
-
-      gps_fix_pub_->publish(fix);
+      gps_fix_pub_->publish(std::move(fix));
     }
 
     void process_data_navsat(struct gps_data_t* p)
