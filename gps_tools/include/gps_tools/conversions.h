@@ -163,7 +163,7 @@ static inline void LLtoUTM(const double Lat, const double Long,
 	double LatRad = Lat*RADIANS_PER_DEGREE;
 	double LongRad = LongTemp*RADIANS_PER_DEGREE;
 	double LongOriginRad;
-	int    ZoneNumber;
+	unsigned int ZoneNumber; // between 0 and 60
 
 	ZoneNumber = int((LongTemp + 180)/6) + 1;
 
@@ -182,8 +182,9 @@ static inline void LLtoUTM(const double Lat, const double Long,
 	LongOrigin = (ZoneNumber - 1)*6 - 180 + 3;
 	LongOriginRad = LongOrigin * RADIANS_PER_DEGREE;
 
-	//compute the UTM Zone from the latitude and longitude
-	snprintf(UTMZone, 4, "%d%c", ZoneNumber, UTMLetterDesignator(Lat));
+	// Compute the UTM Zone from the latitude and longitude.
+	// Do ZoneNumber%100 to limit %d to 2 character width
+	snprintf(UTMZone, 4, "%d%c", ZoneNumber%100, UTMLetterDesignator(Lat));
 
 	eccPrimeSquared = (eccSquared)/(1-eccSquared);
 
