@@ -20,11 +20,11 @@ ament_auto_find_build_dependencies()
 ament_python_install_package(${PROJECT_NAME})
 
 
-# # utm_gpsfix_to_odometry
-# ament_auto_add_library(${gps_to_nav} SHARED src/${gps_to_nav}.cpp)
-# rclcpp_components_register_nodes(${gps_to_nav} "gps_tools::UTMGPSFixToOdometryComponent")
+# utm_gpsfix_to_odometry
+ament_auto_add_library(${gps_to_nav} SHARED src/${gps_to_nav}.cpp)
+rclcpp_components_register_nodes(${gps_to_nav} "gps_tools::UTMGPSFixToOdometryComponent")
 
-# ament_auto_add_executable(${gps_to_nav}_node src/${gps_to_nav}_node.cpp)
+ament_auto_add_executable(${gps_to_nav}_node src/${gps_to_nav}_node.cpp)
 
 
 # utm_navsatfix_to_odometry
