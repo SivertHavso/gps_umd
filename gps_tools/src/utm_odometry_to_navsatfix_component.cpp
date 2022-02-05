@@ -26,7 +26,7 @@ UtmOdometryToNavSatFixComponent::UtmOdometryToNavSatFixComponent(
   odom_sub_ = create_subscription<nav_msgs::msg::Odometry>(
     "odom",
     10,
-    std::bind(&UtmOdometryToNavSatFixComponent::odom_callback, std::placeholders::_1)
+    std::bind(&UtmOdometryToNavSatFixComponent::odom_callback, this, std::placeholders::_1)
   );
 }
 
@@ -85,7 +85,7 @@ void UtmOdometryToNavSatFixComponent::odom_callback(nav_msgs::msg::Odometry::Uni
   fix.status.status = sensor_msgs::msg::NavSatStatus::STATUS_FIX;
 
   fix_pub_->publish(fix);
-};
+}
 }  // namespace gps_tools
 
 #include <rclcpp_components/register_node_macro.hpp>  // NOLINT

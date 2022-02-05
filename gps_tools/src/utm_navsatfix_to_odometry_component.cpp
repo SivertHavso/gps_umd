@@ -33,7 +33,7 @@ UtmOdometryComponent::UtmOdometryComponent(const rclcpp::NodeOptions & options)
   fix_sub_ = create_subscription<sensor_msgs::msg::NavSatFix>(
     "fix",
     10,
-    std::bind(&UtmOdometryComponent::navsatfix_callback, std::placeholders::_1)
+    std::bind(&UtmOdometryComponent::navsatfix_callback, this, std::placeholders::_1)
   );
 }
 
