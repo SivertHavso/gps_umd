@@ -42,7 +42,7 @@ void UtmOdometryToNavSatFixComponent::odom_callback(nav_msgs::msg::Odometry::Uni
 
   double northing, easting, latitude, longitude;
   std::string zone;
-  sensor_msgs::msg::NavSatFix fix;
+  sensor_msgs::msg::NavSatFix::UniquePtr fix;
 
   northing = odom->pose.pose.position.y;
   easting = odom->pose.pose.position.x;
@@ -50,7 +50,7 @@ void UtmOdometryToNavSatFixComponent::odom_callback(nav_msgs::msg::Odometry::Uni
   if (zone_.length() > 0) {
     // utm zone was supplied as a ROS parameter
     zone = zone_;
-    fix.header.frame_id = odom->header.frame_id;
+    fix->header.frame_id = odom->header.frame_id;
   } else {
     // look for the utm zone in the frame_id
     std::size_t pos = odom->header.frame_id.find("/utm_");
@@ -59,32 +59,32 @@ void UtmOdometryToNavSatFixComponent::odom_callback(nav_msgs::msg::Odometry::Uni
       return;
     }
     zone = odom->header.frame_id.substr(pos + 5, 3);
-    fix.header.frame_id = odom->header.frame_id.substr(0, pos);
+    fix->header.frame_id = odom->header.frame_id.substr(0, pos);
   }
 
   RCLCPP_INFO(this->get_logger(), "zone: %s", zone.c_str());
 
-  fix.header.stamp = odom->header.stamp;
+  fix->header.stamp = odom->header.stamp;
 
   UTMtoLL(northing, easting, zone, latitude, longitude);
 
-  fix.latitude = latitude;
-  fix.longitude = longitude;
-  fix.altitude = odom->pose.pose.position.z;
+  fix->latitude = latitude;
+  fix->longitude = longitude;
+  fix->altitude = odom->pose.pose.position.z;
 
-  fix.position_covariance[0] = odom->pose.covariance[0];
-  fix.position_covariance[1] = odom->pose.covariance[1];
-  fix.position_covariance[2] = odom->pose.covariance[2];
-  fix.position_covariance[3] = odom->pose.covariance[6];
-  fix.position_covariance[4] = odom->pose.covariance[7];
-  fix.position_covariance[5] = odom->pose.covariance[8];
-  fix.position_covariance[6] = odom->pose.covariance[12];
-  fix.position_covariance[7] = odom->pose.covariance[13];
-  fix.position_covariance[8] = odom->pose.covariance[14];
+  fix->position_covariance[0] = odom->pose.covariance[0];
+  fix->position_covariance[1] = odom->pose.covariance[1];
+  fix->position_covariance[2] = odom->pose.covariance[2];
+  fix->position_covariance[3] = odom->pose.covariance[6];
+  fix->position_covariance[4] = odom->pose.covariance[7];
+  fix->position_covariance[5] = odom->pose.covariance[8];
+  fix->position_covariance[6] = odom->pose.covariance[12];
+  fix->position_covariance[7] = odom->pose.covariance[13];
+  fix->position_covariance[8] = odom->pose.covariance[14];
 
-  fix.status.status = sensor_msgs::msg::NavSatStatus::STATUS_FIX;
+  fix->status.status = sensor_msgs::msg::NavSatStatus::STATUS_FIX;
 
-  fix_pub_->publish(fix);
+  fix_pub_->publish(std::move(fix));
 }
 }  // namespace gps_tools
 
