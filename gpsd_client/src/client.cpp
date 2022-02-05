@@ -24,8 +24,12 @@ GPSDClientComponent::GPSDClientComponent(const rclcpp::NodeOptions & options)
 
 bool GPSDClientComponent::start()
 {
-  gps_fix_pub_ = create_publisher<gps_msgs::msg::GPSFix>("extended_fix", 1);
-  navsatfix_pub_ = create_publisher<sensor_msgs::msg::NavSatFix>("fix", 1);
+  gps_fix_pub_ = create_publisher<gps_msgs::msg::GPSFix>(
+    "extended_fix",
+    rclcpp::SensorDataQoS(rclcpp::KeepLast(1)));
+  navsatfix_pub_ = create_publisher<sensor_msgs::msg::NavSatFix>(
+    "fix",
+    rclcpp::SensorDataQoS(rclcpp::KeepLast(1)));
 
   get_parameter_or("use_gps_time", use_gps_time_, use_gps_time_);
   get_parameter_or("check_fix_by_variance", check_fix_by_variance_, check_fix_by_variance_);
@@ -117,6 +121,17 @@ void GPSDClientComponent::process_data_gps(struct gps_data_t * p)
   rclcpp::Time time = this->get_clock()->now();
 
   gps_msgs::msg::GPSFix::UniquePtr fix = std::make_unique<gps_msgs::msg::GPSFix>();
+
+#if GPSD_API_MAJOR_VERSION >= 9
+  if (use_gps_time_ && (p->online.tv_sec || p->online.tv_nsec)) {
+    fix->header.stamp = rclcpp::Time(p->fix.time.tv_sec, p->fix.time.tv_nsec);
+#else
+  if (use_gps_time_ && !std::isnan(p->fix.time)) {
+    fix->header.stamp = rclcpp::Time(p->fix.time);
+#endif
+  } else {
+    fix->header.stamp = this->get_clock()->now();
+  }
 
   fix->header.stamp = time;
   fix->header.frame_id = frame_id_;

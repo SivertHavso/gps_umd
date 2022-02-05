@@ -19,7 +19,7 @@ namespace gps_tools
 
 UTMNavSatFixToOdometryComponent::UTMNavSatFixToOdometryComponent(
   const rclcpp::NodeOptions & options)
-: Node("utm_odometry_node", options),
+: Node("utm_navsatfix_to_odometry_node", options),
   frame_id_(""),
   child_frame_id_(""),
   rot_cov_(99999.0),

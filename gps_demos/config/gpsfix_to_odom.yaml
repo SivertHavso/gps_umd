@@ -1,0 +1,5 @@
+utm_gpsfix_to_odometry_node:
+  ros__parameters:
+    frame_id: map
+    child_frame_id: base_link
+    append_zone: false
