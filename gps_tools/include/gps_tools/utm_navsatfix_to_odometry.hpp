@@ -1,8 +1,8 @@
 /*
  * Translates sensor_msgs/NavSat{Fix,Status} into nav_msgs/Odometry using UTM
  */
-#ifndef GPS_TOOLS__UTM_NAVSATFIX_TO_ODOMETRY_COMPONENT_HPP_
-#define GPS_TOOLS__UTM_NAVSATFIX_TO_ODOMETRY_COMPONENT_HPP_
+#ifndef GPS_TOOLS__UTM_NAVSATFIX_TO_ODOMETRY_HPP_
+#define GPS_TOOLS__UTM_NAVSATFIX_TO_ODOMETRY_HPP_
 
 
 #include <rclcpp/rclcpp.hpp>
@@ -14,12 +14,15 @@
 
 #include <string>
 
+#include "gps_tools/visibility_control.h"
+
 namespace gps_tools
 {
-class UtmNavSatFixToOdometryComponent : public rclcpp::Node
+class UTMNavSatFixToOdometryComponent : public rclcpp::Node
 {
 public:
-  explicit UtmNavSatFixToOdometryComponent(const rclcpp::NodeOptions & options);
+  GPS_TOOLS_PUBLIC
+  explicit UTMNavSatFixToOdometryComponent(const rclcpp::NodeOptions & options);
 
 private:
   void navsatfix_callback(sensor_msgs::msg::NavSatFix::UniquePtr fix);
@@ -33,4 +36,4 @@ private:
 };
 }  // namespace gps_tools
 
-#endif  // GPS_TOOLS__UTM_NAVSATFIX_TO_ODOMETRY_COMPONENT_HPP_
+#endif  // GPS_TOOLS__UTM_NAVSATFIX_TO_ODOMETRY_HPP_

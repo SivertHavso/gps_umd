@@ -12,10 +12,11 @@
 #include <nav_msgs/msg/odometry.hpp>
 
 #include <string>
+#include <utility>
 
 namespace gps_tools
 {
-UtmOdometryToNavSatFixComponent::UtmOdometryToNavSatFixComponent(
+UTMOdometryToNavSatFixComponent::UTMOdometryToNavSatFixComponent(
   const rclcpp::NodeOptions & options)
 : Node("utm_odometry_to_navsatfix_node", options)
 {
@@ -26,11 +27,11 @@ UtmOdometryToNavSatFixComponent::UtmOdometryToNavSatFixComponent(
   odom_sub_ = create_subscription<nav_msgs::msg::Odometry>(
     "odom",
     10,
-    std::bind(&UtmOdometryToNavSatFixComponent::odom_callback, this, std::placeholders::_1)
+    std::bind(&UTMOdometryToNavSatFixComponent::odom_callback, this, std::placeholders::_1)
   );
 }
 
-void UtmOdometryToNavSatFixComponent::odom_callback(nav_msgs::msg::Odometry::UniquePtr odom)
+void UTMOdometryToNavSatFixComponent::odom_callback(nav_msgs::msg::Odometry::UniquePtr odom)
 {
   if (odom->header.stamp.sec == 0 && odom->header.stamp.nanosec == 0) {
     return;
@@ -89,4 +90,4 @@ void UtmOdometryToNavSatFixComponent::odom_callback(nav_msgs::msg::Odometry::Uni
 }  // namespace gps_tools
 
 #include <rclcpp_components/register_node_macro.hpp>  // NOLINT
-RCLCPP_COMPONENTS_REGISTER_NODE(gps_tools::UtmOdometryToNavSatFixComponent)
+RCLCPP_COMPONENTS_REGISTER_NODE(gps_tools::UTMOdometryToNavSatFixComponent)

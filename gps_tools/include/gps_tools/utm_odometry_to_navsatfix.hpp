@@ -4,8 +4,8 @@
  * Added by Dheera Venkatraman (dheera@dheera.net)
  */
 
-#ifndef GPS_TOOLS__UTM_ODOMETRY_TO_NAVSATFIX_COMPONENT_HPP_
-#define GPS_TOOLS__UTM_ODOMETRY_TO_NAVSATFIX_COMPONENT_HPP_
+#ifndef GPS_TOOLS__UTM_ODOMETRY_TO_NAVSATFIX_HPP_
+#define GPS_TOOLS__UTM_ODOMETRY_TO_NAVSATFIX_HPP_
 
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/nav_sat_fix.hpp>
@@ -15,12 +15,15 @@
 
 #include <string>
 
+#include "gps_tools/visibility_control.h"
+
 namespace gps_tools
 {
-class UtmOdometryToNavSatFixComponent : public rclcpp::Node
+class UTMOdometryToNavSatFixComponent : public rclcpp::Node
 {
 public:
-  explicit UtmOdometryToNavSatFixComponent(const rclcpp::NodeOptions & options);
+  GPS_TOOLS_PUBLIC
+  explicit UTMOdometryToNavSatFixComponent(const rclcpp::NodeOptions & options);
 
 private:
   void odom_callback(nav_msgs::msg::Odometry::UniquePtr odom);
@@ -33,4 +36,4 @@ private:
 };
 }  // namespace gps_tools
 
-#endif  // GPS_TOOLS__UTM_ODOMETRY_TO_NAVSATFIX_COMPONENT_HPP_
+#endif  // GPS_TOOLS__UTM_ODOMETRY_TO_NAVSATFIX_HPP_

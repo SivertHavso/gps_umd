@@ -13,7 +13,7 @@ int main(int argc, char ** argv)
 
   rclcpp::NodeOptions options;
 
-  auto gpsd_client_node = std::make_shared<gps_tools::UtmNavSatFixToOdometryComponent>(options);
+  auto gpsd_client_node = std::make_shared<gps_tools::UTMNavSatFixToOdometryComponent>(options);
 
   rclcpp::spin(gpsd_client_node);
 

@@ -12,11 +12,13 @@
 #include <nav_msgs/msg/odometry.hpp>
 
 #include <string>
+#include <utility>
 
 namespace gps_tools
 {
 
-UtmNavSatFixToOdometryComponent::UtmNavSatFixToOdometryComponent(const rclcpp::NodeOptions & options)
+UTMNavSatFixToOdometryComponent::UTMNavSatFixToOdometryComponent(
+  const rclcpp::NodeOptions & options)
 : Node("utm_odometry_node", options),
   frame_id_(""),
   child_frame_id_(""),
@@ -33,11 +35,11 @@ UtmNavSatFixToOdometryComponent::UtmNavSatFixToOdometryComponent(const rclcpp::N
   fix_sub_ = create_subscription<sensor_msgs::msg::NavSatFix>(
     "fix",
     10,
-    std::bind(&UtmNavSatFixToOdometryComponent::navsatfix_callback, this, std::placeholders::_1)
+    std::bind(&UTMNavSatFixToOdometryComponent::navsatfix_callback, this, std::placeholders::_1)
   );
 }
 
-void UtmNavSatFixToOdometryComponent::navsatfix_callback(sensor_msgs::msg::NavSatFix::UniquePtr fix)
+void UTMNavSatFixToOdometryComponent::navsatfix_callback(sensor_msgs::msg::NavSatFix::UniquePtr fix)
 {
   if (fix->status.status == sensor_msgs::msg::NavSatStatus::STATUS_NO_FIX) {
     RCLCPP_DEBUG(this->get_logger(), "No fix.");
@@ -107,4 +109,4 @@ void UtmNavSatFixToOdometryComponent::navsatfix_callback(sensor_msgs::msg::NavSa
 }  // namespace gps_tools
 
 #include <rclcpp_components/register_node_macro.hpp>  // NOLINT
-RCLCPP_COMPONENTS_REGISTER_NODE(gps_tools::UtmNavSatFixToOdometryComponent)
+RCLCPP_COMPONENTS_REGISTER_NODE(gps_tools::UTMNavSatFixToOdometryComponent)
