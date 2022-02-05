@@ -262,8 +262,9 @@ void GPSDClientComponent::process_data_navsat(struct gps_data_t * p)
     return;
   }
 
-  fix->position_covariance[0] = p->fix.epx;
-  fix->position_covariance[4] = p->fix.epy;
+  // flipping epy and epx here to get ENU
+  fix->position_covariance[0] = p->fix.epy;
+  fix->position_covariance[4] = p->fix.epx;
   fix->position_covariance[8] = p->fix.epv;
 
   fix->position_covariance_type = sensor_msgs::msg::NavSatFix::COVARIANCE_TYPE_DIAGONAL_KNOWN;
