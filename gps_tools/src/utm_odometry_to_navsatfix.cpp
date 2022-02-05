@@ -3,7 +3,7 @@
  * Useful for visualizing UTM data on a map or comparing with raw GPS data
  * Added by Dheera Venkatraman (dheera@dheera.net)
  */
-#include "gps_tools/utm_odometry_to_navsatfix_component.hpp"
+#include "gps_tools/utm_odometry_to_navsatfix.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/nav_sat_fix.hpp>

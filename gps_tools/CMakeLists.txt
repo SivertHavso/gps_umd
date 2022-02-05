@@ -26,7 +26,7 @@ ament_python_install_package(${PROJECT_NAME})
 # Libraries / Components
 
 add_library(${nav_to_odom} SHARED
-  src/${nav_to_odom}_component.cpp)
+  src/${nav_to_odom}.cpp)
 target_include_directories(${nav_to_odom}
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -43,7 +43,7 @@ ament_target_dependencies(${nav_to_odom}
 )
 
 add_library(${odom_to_nav} SHARED
-  src/${odom_to_nav}_component.cpp)
+  src/${odom_to_nav}.cpp)
 target_include_directories(${odom_to_nav}
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

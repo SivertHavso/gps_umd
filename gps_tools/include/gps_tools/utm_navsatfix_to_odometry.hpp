@@ -16,10 +16,10 @@
 
 namespace gps_tools
 {
-class UtmOdometryComponent : public rclcpp::Node
+class UtmNavSatFixToOdometryComponent : public rclcpp::Node
 {
 public:
-  explicit UtmOdometryComponent(const rclcpp::NodeOptions & options);
+  explicit UtmNavSatFixToOdometryComponent(const rclcpp::NodeOptions & options);
 
 private:
   void navsatfix_callback(sensor_msgs::msg::NavSatFix::UniquePtr fix);
