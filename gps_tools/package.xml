@@ -9,7 +9,7 @@
   <url type="website">http://ros.org/wiki/gps_common</url>
   <url type="repository">https://github.com/swri-robotics/gms_umd</url>
 
-  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_auto</buildtool_depend>
   <buildtool_depend>ament_cmake_python</buildtool_depend>
 
   <depend>gps_msgs</depend>
@@ -19,6 +19,7 @@
   <depend>rclpy</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
+  <depend>tf2</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
