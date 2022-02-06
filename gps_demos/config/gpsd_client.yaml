@@ -3,3 +3,13 @@ gpsd_client:
     use_gps_time: false
     check_fix_by_variance: false
     frame_id: gps
+
+    experimental_use_gpsd_shared_memory: false
+
+    # Uncomment to use a different host address than the default (localhost)
+    # The host address may be a DNS name, an IPv4 dotted quad, or an IPV6 address
+    # Will be overwritten by experimental_use_gpsd_shared_memory
+    # host: localhost
+
+    # Uncomment to use a different port than the default (2947)
+    # port: 2947

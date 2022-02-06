@@ -22,7 +22,7 @@ namespace gps_tools
 #define DEG_TO_RAD_FACTOR 0.0174532925
 
 UTMGPSFixToOdometryComponent::UTMGPSFixToOdometryComponent(const rclcpp::NodeOptions & options)
-: Node("utm_odometry_node", options),
+: Node("utm_gpsfix_to_odometry_node", options),
   frame_id_(""),
   child_frame_id_(""),
   append_zone_(false)

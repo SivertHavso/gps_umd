@@ -10,6 +10,9 @@
 #include <utility>
 #include <memory>
 
+#include <cmath>
+
+using namespace std::chrono_literals;
 namespace gpsd_client
 {
 
@@ -19,7 +22,9 @@ GPSDClientComponent::GPSDClientComponent(const rclcpp::NodeOptions & options)
   use_gps_time_(true),
   check_fix_by_variance_(true),
   frame_id_("gps")
-{}
+{
+  start();
+}
 
 
 bool GPSDClientComponent::start()
@@ -31,30 +36,37 @@ bool GPSDClientComponent::start()
     "fix",
     rclcpp::SensorDataQoS(rclcpp::KeepLast(1)));
 
+  bool use_shared_memory_gpsd;
   get_parameter_or("use_gps_time", use_gps_time_, use_gps_time_);
   get_parameter_or("check_fix_by_variance", check_fix_by_variance_, check_fix_by_variance_);
   get_parameter_or("frame_id", frame_id_, frame_id_);
+  get_parameter_or("experimental_use_gpsd_shared_memory", use_shared_memory_gpsd, false);
 
   std::string host = "localhost";
-  int port = 2947;
+  std::string port = DEFAULT_GPSD_PORT;
   get_parameter_or("host", host, host);
   get_parameter_or("port", port, port);
 
-  char port_s[12];
-  snprintf(port_s, sizeof(port_s), "%d", port);
+  if (use_shared_memory_gpsd) {
+    host = std::string(GPSD_SHARED_MEMORY);
+  }
 
   gps_data_t * resp = nullptr;
 
 #if GPSD_API_MAJOR_VERSION >= 5
-  gps_ = new gpsmm(host.c_str(), port_s);
-  resp = gps_->stream(WATCH_ENABLE);
+  gps_ = new gpsmm(host.c_str(), port.c_str());
+  if (!use_shared_memory_gpsd) {
+    resp = gps_->stream(WATCH_ENABLE);
+  }
 #elif GPSD_API_MAJOR_VERSION == 4
   gps = new gpsmm();
-  gps->open(host.c_str(), port_s);
-  resp = gps->stream(WATCH_ENABLE);
+  gps->open(host.c_str(), port.c_str());
+  if (!use_shared_memory_gpsd) {
+    resp = gps->stream(WATCH_ENABLE);
+  }
 #else
   gps = new gpsmm();
-  resp = gps->open(host.c_str(), port_s);
+  resp = gps->open(host.c_str(), port.c_str());
   gps->query("w\n");
 #endif
 
