@@ -10,8 +10,6 @@
 #include <utility>
 #include <memory>
 
-#include <cmath>
-
 using namespace std::chrono_literals;
 namespace gpsd_client
 {
@@ -23,12 +21,8 @@ GPSDClientComponent::GPSDClientComponent(const rclcpp::NodeOptions & options)
   check_fix_by_variance_(true),
   frame_id_("gps")
 {
-  start();
-}
+  future_ = exit_signal_.get_future();
 
-
-bool GPSDClientComponent::start()
-{
   gps_fix_pub_ = create_publisher<gps_msgs::msg::GPSFix>(
     "extended_fix",
     rclcpp::SensorDataQoS(rclcpp::KeepLast(1)));
@@ -37,10 +31,16 @@ bool GPSDClientComponent::start()
     rclcpp::SensorDataQoS(rclcpp::KeepLast(1)));
 
   bool use_shared_memory_gpsd;
+  unsigned int gps_hz_hint;
   get_parameter_or("use_gps_time", use_gps_time_, use_gps_time_);
   get_parameter_or("check_fix_by_variance", check_fix_by_variance_, check_fix_by_variance_);
   get_parameter_or("frame_id", frame_id_, frame_id_);
   get_parameter_or("experimental_use_gpsd_shared_memory", use_shared_memory_gpsd, false);
+  get_parameter_or("gps_hz_hint", gps_hz_hint, 1u);
+
+  // GPS timeout should be at least 2x the cycle time of the device
+  // see: https://gpsd.gitlab.io/gpsd/client-howto.html#_the_sockets_interface
+  gps_timeout_us_ = (1000000 / gps_hz_hint) * 2;
 
   std::string host = "localhost";
   std::string port = DEFAULT_GPSD_PORT;
@@ -72,18 +72,28 @@ bool GPSDClientComponent::start()
 
   if (resp == nullptr) {
     RCLCPP_ERROR(this->get_logger(), "Failed to open GPSd");
-    return false;
+    return;
   }
 
   RCLCPP_INFO(this->get_logger(), "GPSd opened");
-  return true;
+
+  poll_thread_ = std::thread(&GPSDClientComponent::poll_thread, this);
 }
 
+void GPSDClientComponent::poll_thread()
+{
+  std::future_status status;
 
-void GPSDClientComponent::step()
+  do {
+    this->poll();
+    status = future_.wait_for(std::chrono::seconds(0));
+  } while (status == std::future_status::timeout);
+}
+
+void GPSDClientComponent::poll()
 {
 #if GPSD_API_MAJOR_VERSION >= 5
-  if (!gps_->waiting(1e6)) {
+  if (!gps_->waiting(gps_timeout_us_)) {
     return;
   }
 
@@ -92,12 +102,6 @@ void GPSDClientComponent::step()
   gps_data_t * p = gps->poll();
 #endif
   process_data(p);
-}
-
-
-void GPSDClientComponent::stop()
-{
-  // gpsmm doesn't have a close method? OK ...
 }
 
 
