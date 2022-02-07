@@ -33,6 +33,11 @@ private:
   std::string frame_id_, child_frame_id_;
   double rot_cov_;
   bool append_zone_;
+  bool estimate_speed_error_;
+  bool estimate_track_error_;
+
+  double prev_x_;
+  double prev_y_;
 };
 }  // namespace gps_tools
 

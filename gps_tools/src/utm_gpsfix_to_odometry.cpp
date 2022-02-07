@@ -25,13 +25,19 @@ UTMGPSFixToOdometryComponent::UTMGPSFixToOdometryComponent(const rclcpp::NodeOpt
 : Node("utm_gpsfix_to_odometry_node", options),
   frame_id_(""),
   child_frame_id_(""),
-  append_zone_(false)
+  append_zone_(false),
+  estimate_speed_error_(false),
+  estimate_track_error_(false),
+  prev_x_(0.0),
+  prev_y_(0.0)
 {
   odom_pub_ = create_publisher<nav_msgs::msg::Odometry>("odom", 10);
 
   get_parameter_or("child_frame_id", child_frame_id_, child_frame_id_);
   get_parameter_or("frame_id", frame_id_, frame_id_);
   get_parameter_or("append_zone", append_zone_, append_zone_);
+  get_parameter_or("estimate_speed_error", estimate_speed_error_, estimate_speed_error_);
+  get_parameter_or("estimate_track_error", estimate_track_error_, estimate_track_error_);
 
   fix_sub_ = create_subscription<gps_msgs::msg::GPSFix>(
     "fix",
@@ -129,6 +135,22 @@ void UTMGPSFixToOdometryComponent::gpsfix_callback(gps_msgs::msg::GPSFix::Unique
   odom->twist.twist.linear.y = fix->speed * cos_yaw;
   odom->twist.twist.linear.z = fix->climb;
 
+  if (estimate_speed_error_) {
+    fix->err_speed = fix->err_horz * 3;
+    fix->err_climb = fix->err_vert * 3;
+  }
+
+  if (estimate_track_error_) {
+    double deltaX = (prev_x_ - odom->pose.pose.position.x);
+    double deltaY = (prev_y_ - odom->pose.pose.position.y);
+    double err_y_over_x = ((fix->err_horz / deltaY) + (fix->err_horz / deltaX)) * yaw;
+    double x_over_y = deltaY / deltaX;
+
+    // Assume arctan through atan2 is used:
+    // see https://www.kpu.ca/sites/default/files/Faculty%20of%20Science%20%26%20Horticulture/Physics/PHYS%201120%20Error%20Propagation%20Solutions.pdf  // NOLINT
+    fix->err_track = err_y_over_x / (1 + x_over_y * x_over_y);
+  }
+
   if (fix->err_speed > 0.0) {
     // Propagate errors of speed and track - TODO(SivertHavso): confirm algorithm
     odom->twist.covariance[0] = sin_yaw * fix->err_speed + fix->speed * cos_yaw * fix->err_track;
@@ -136,6 +158,9 @@ void UTMGPSFixToOdometryComponent::gpsfix_callback(gps_msgs::msg::GPSFix::Unique
   }
 
   odom->twist.covariance[8] = fix->err_climb;
+
+  prev_x_ = odom->pose.pose.position.x;
+  prev_y_ = odom->pose.pose.position.x;
 
   odom_pub_->publish(std::move(odom));
 }
