@@ -80,6 +80,14 @@ GPSDClientComponent::GPSDClientComponent(const rclcpp::NodeOptions & options)
   poll_thread_ = std::thread(&GPSDClientComponent::poll_thread, this);
 }
 
+
+GPSDClientComponent::~GPSDClientComponent()
+{
+  exit_signal_.set_value();
+  poll_thread_.join();
+}
+
+
 void GPSDClientComponent::poll_thread()
 {
   std::future_status status;
