@@ -10,6 +10,12 @@
 
 namespace gpsd_client
 {
+
+enum ErrorSource {
+  GPSD,
+  NMEA0183_GST
+};
+
 class GPSDClientComponent : public rclcpp::Node
 {
 public:
@@ -36,6 +42,8 @@ private:
   bool check_fix_by_variance_;
   std::string frame_id_;
   unsigned int gps_timeout_us_;
+  ErrorSource error_source_;
+
 
   // We use this future/promise pair to notify threads that we are shutting down
   std::shared_future<void> future_;

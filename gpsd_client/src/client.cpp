@@ -32,11 +32,17 @@ GPSDClientComponent::GPSDClientComponent(const rclcpp::NodeOptions & options)
 
   bool use_shared_memory_gpsd;
   unsigned int gps_hz_hint;
+  std::string error_source = "gpsd";
   get_parameter_or("use_gps_time", use_gps_time_, use_gps_time_);
   get_parameter_or("check_fix_by_variance", check_fix_by_variance_, check_fix_by_variance_);
   get_parameter_or("frame_id", frame_id_, frame_id_);
   get_parameter_or("experimental_use_gpsd_shared_memory", use_shared_memory_gpsd, false);
   get_parameter_or("gps_hz_hint", gps_hz_hint, 1u);
+  get_parameter_or("error_source", error_source, error_source);
+
+  if (error_source == "gst") {
+    error_source_ == NMEA0183_GST;
+  }
 
   // GPS timeout should be at least 2x the cycle time of the device
   // see: https://gpsd.gitlab.io/gpsd/client-howto.html#_the_sockets_interface
@@ -157,7 +163,6 @@ void GPSDClientComponent::process_data_gps(struct gps_data_t * p)
     fix->header.stamp = this->get_clock()->now();
   }
 
-  fix->header.stamp = time;
   fix->header.frame_id = frame_id_;
 
   fix->status.satellites_used = p->satellites_used;
@@ -246,6 +251,35 @@ void GPSDClientComponent::process_data_gps(struct gps_data_t * p)
     fix->status.status = -1;  // STATUS_NO_FIX
   }
 
+  switch (error_source_)
+  {
+  case NMEA0183_GST:
+    // GPSD seems to not use the standard deviation from the GST sentences to calculate error
+    // estimates. Therefore allow explicitly using them here.
+    // flipping y and x here to get ENU
+    fix->position_covariance[0] =
+      (p->gst.lon_err_deviation * p->gst.lon_err_deviation) * std::max(p->dop.ydop, 1.0);
+    fix->position_covariance[4] =
+      (p->gst.lat_err_deviation * p->gst.lat_err_deviation) * std::max(p->dop.xdop, 1.0);
+    fix->position_covariance[8] =
+      (p->gst.alt_err_deviation * p->gst.alt_err_deviation) * std::max(p->dop.vdop, 1.0);
+    break;
+  case GPSD:  // FALL THROUGH
+  default:
+    // flipping y and x here to get ENU
+    fix->position_covariance[0] = p->fix.epy * std::max(p->dop.ydop, 1.0);
+    fix->position_covariance[4] = p->fix.epx * std::max(p->dop.xdop, 1.0);
+    fix->position_covariance[8] = p->fix.epv * std::max(p->dop.vdop, 1.0);
+    break;
+  }
+
+  // TODO(SivertHavso): Allow setting the meaning of ep(x/y/v/h) to sigma, 2xsigma, 95% confidence
+  // interval, etc.
+
+  if (error_source_ == GPSD) {
+  }
+  fix->position_covariance_type = sensor_msgs::msg::NavSatFix::COVARIANCE_TYPE_APPROXIMATED;
+
   gps_fix_pub_->publish(std::move(fix));
 }
 
@@ -302,11 +336,11 @@ void GPSDClientComponent::process_data_navsat(struct gps_data_t * p)
   }
 
   // flipping epy and epx here to get ENU
-  fix->position_covariance[0] = p->fix.epy;
-  fix->position_covariance[4] = p->fix.epx;
-  fix->position_covariance[8] = p->fix.epv;
+  fix->position_covariance[0] = p->fix.epy * std::max(p->dop.ydop, 1.0);
+  fix->position_covariance[4] = p->fix.epx * std::max(p->dop.xdop, 1.0);
+  fix->position_covariance[8] = p->fix.epv * std::max(p->dop.vdop, 1.0);
 
-  fix->position_covariance_type = sensor_msgs::msg::NavSatFix::COVARIANCE_TYPE_DIAGONAL_KNOWN;
+  fix->position_covariance_type = sensor_msgs::msg::NavSatFix::COVARIANCE_TYPE_APPROXIMATED;
 
   navsatfix_pub_->publish(std::move(fix));
 }

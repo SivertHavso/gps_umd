@@ -46,6 +46,12 @@ float64 vdop
 # Temporal dilution of precision
 float64 tdop
 
+# X (East) dilution of precision
+float64 xdop
+
+# Y (West) dilution of precision
+float64 ydop
+
 ## Uncertainty of measurement, 95% confidence
 
 # Spherical position uncertainty (meters) [epe]
